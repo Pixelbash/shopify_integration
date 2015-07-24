@@ -18,7 +18,7 @@ class ShopifyAPI
 
     # Function to limit number of products returned at once
     unless(@config['start'].nil? or @config['limit'].nil?)
-      products = products.slice(@config['start'], @config['limit'])
+      products = products.slice(@config['start'].to_i, @config['limit'].to_i)
     end
 
     products.each do |product|
