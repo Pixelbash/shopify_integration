@@ -25,9 +25,9 @@ class ShopifyAPI
       unless product.variants.nil?
         product.variants.each do |variant|
           unless variant.sku.blank?
-            inventory = Inventory.new
-            inventory.add_obj variant
-            inventories << inventory.wombat_obj
+            # inventory = Inventory.new
+            # inventory.add_obj variant
+            # inventories << inventory.wombat_obj
           end
         end
       end
