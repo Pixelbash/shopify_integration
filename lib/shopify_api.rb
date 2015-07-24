@@ -15,6 +15,12 @@ class ShopifyAPI
   def get_products
     inventories = Array.new
     products = get_objs('products', Product)
+
+    # Function to limit number of products returned at once
+    unless(@config['start'].nil? or @config['limit'].nil?)
+      products = products.slice(@config['start'], @config['limit'])
+    end
+
     products.each do |product|
       unless product.variants.nil?
         product.variants.each do |variant|
