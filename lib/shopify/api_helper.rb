@@ -1,6 +1,7 @@
 module Shopify
   module APIHelper
     def api_get resource, data = {}
+      logger.debug 'data'
       logger.debug data
       params = ''
       unless data.empty?
