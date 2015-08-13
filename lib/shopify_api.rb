@@ -14,7 +14,7 @@ class ShopifyAPI
 
   def get_products
     inventories = Array.new
-    products = get_objs('products', Product, [{limit: 250}])
+    products = get_objs('products', Product, [{limit: 150}])
 
     # Function to limit number of products returned at once
     # unless(@config['start'].nil? or @config['limit'].nil?)
