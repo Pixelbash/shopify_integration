@@ -39,7 +39,7 @@ module Shopify
       else
         resource += '.json'
       end
-      resource
+      resource 
     end
   end
 end

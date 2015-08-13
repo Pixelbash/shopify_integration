@@ -14,7 +14,7 @@ class ShopifyAPI
 
   def get_products
     inventories = Array.new
-    products = get_objs('products', Product)
+    products = get_objs('products', Product, {limit: 250})
 
     # Function to limit number of products returned at once
     # unless(@config['start'].nil? or @config['limit'].nil?)
@@ -248,9 +248,9 @@ class ShopifyAPI
     }
   end
 
-  def get_objs objs_name, obj_class
+  def get_objs objs_name, obj_class, data = {}
     objs = Array.new
-    shopify_objs = api_get objs_name
+    shopify_objs = api_get objs_name data
     if shopify_objs.values.first.kind_of?(Array)
       shopify_objs.values.first.each do |shopify_obj|
         obj = obj_class.new
