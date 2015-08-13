@@ -14,13 +14,14 @@ class ShopifyAPI
 
   def get_products
     inventories = Array.new
-    products = get_objs('products', Product, {limit: 250})
+    products = get_objs('products', Product, [{limit: 250}])
 
     # Function to limit number of products returned at once
     # unless(@config['start'].nil? or @config['limit'].nil?)
     #   products = products.slice(@config['start'].to_i, @config['limit'].to_i)
     # end
 
+    # this is great and all, but really tends to break the object limit in wombat
     products.each do |product|
       unless product.variants.nil?
         product.variants.each do |variant|
