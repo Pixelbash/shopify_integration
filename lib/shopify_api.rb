@@ -14,24 +14,7 @@ class ShopifyAPI
 
   def get_products
     inventories = Array.new
-    products = get_objs('products', Product)
-
-    # Function to limit number of products returned at once
-    unless(@config['start'].nil? or @config['limit'].nil?)
-      products = products.slice(@config['start'].to_i, @config['limit'].to_i)
-    end
-
-    products.each do |product|
-      unless product.variants.nil?
-        product.variants.each do |variant|
-          unless variant.sku.blank?
-            # inventory = Inventory.new
-            # inventory.add_obj variant
-            # inventories << inventory.wombat_obj
-          end
-        end
-      end
-    end
+    products = get_objs('products', Product, {limit: 150, page: 1})
 
     {
       'objects' => Util.wombat_array(products),
@@ -248,9 +231,9 @@ class ShopifyAPI
     }
   end
 
-  def get_objs objs_name, obj_class
+  def get_objs objs_name, obj_class, data
     objs = Array.new
-    shopify_objs = api_get objs_name
+    shopify_objs = api_get objs_name, data || {}
     if shopify_objs.values.first.kind_of?(Array)
       shopify_objs.values.first.each do |shopify_obj|
         obj = obj_class.new
