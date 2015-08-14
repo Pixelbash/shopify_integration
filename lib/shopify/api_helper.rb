@@ -8,10 +8,6 @@ module Shopify
           params += '&' unless params == '?'
           params += "#{key}=#{value}"
         end
-        #manually set limit because it doesn't seem to be working
-        params += '&' unless params == '?'
-        params += "limit=150&"
-        params += "page=1"
       end
 
       response = RestClient.get shopify_url + (final_resource resource) + params
@@ -43,7 +39,7 @@ module Shopify
       else
         resource += '.json'
       end
-      resource 
+      resource
     end
   end
 end
