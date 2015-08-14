@@ -1,8 +1,6 @@
 module Shopify
   module APIHelper
     def api_get resource, data = {}
-      logger.debug 'data'
-      logger.debug data
       params = ''
       unless data.empty?
         params = '?'
@@ -10,6 +8,10 @@ module Shopify
           params += '&' unless params == '?'
           params += "#{key}=#{value}"
         end
+        #manually set limit because it doesn't seem to be working
+        params += '&' unless params == '?'
+        params += "limit=150&"
+        params += "page=1"
       end
 
       response = RestClient.get shopify_url + (final_resource resource) + params
