@@ -13,15 +13,12 @@ class ShopifyAPI
   end
 
   def get_products
-    inventories = Array.new
     products = get_objs('products', Product, {limit: 150, page: 1})
 
     {
       'objects' => Util.wombat_array(products),
       'message' => "Successfully retrieved #{products.length} products " +
-                   "from Shopify.",
-      'additional_objs' => inventories,
-      'additional_objs_name' => 'inventory'
+                   "from Shopify."
     }
   end
 

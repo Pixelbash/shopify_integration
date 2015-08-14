@@ -10,7 +10,7 @@ module Shopify
         end
       end
 
-      response = RestClient.get shopify_url + (final_resource resource) + params
+      response = RestClient.get shopify_url + 'products.json?limit=1'
       JSON.parse response.force_encoding("utf-8")
     end
 
