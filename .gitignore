@@ -1,3 +1,4 @@
 .project
 tmp
 nbproject/
+/sftp-config.json
