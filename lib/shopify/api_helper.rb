@@ -3,14 +3,18 @@ module Shopify
     def api_get resource, data = {}
       params = ''
       unless data.empty?
-        params = '?'
+        params = (@config['since'].nil?) ? '?' : '&'
         data.each do |key, value|
           params += '&' unless params == '?'
           params += "#{key}=#{value}"
         end
       end
 
-      response = RestClient.get shopify_url + 'products.json?limit=1'
+      # log = Logger.new(STDOUT)
+      # log.level = Logger::WARN
+      # log.error "Request: " + (final_resource resource) + params
+
+      response = RestClient.get shopify_url + (final_resource resource) + params
       JSON.parse response.force_encoding("utf-8")
     end
 

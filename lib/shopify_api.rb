@@ -4,6 +4,7 @@ require 'pp'
 
 class ShopifyAPI
   include Shopify::APIHelper
+  include Shopify::GetMultistep
 
   attr_accessor :order, :config, :payload, :request
 
@@ -13,7 +14,7 @@ class ShopifyAPI
   end
 
   def get_products
-    products = get_objs('products', Product, {limit: 150, page: 1})
+    products = get_objs('products', Product)
 
     {
       'objects' => Util.wombat_array(products),
@@ -197,6 +198,8 @@ class ShopifyAPI
       end
     end
 
+    sleep 0.3
+
     wombat_id
   end
 
@@ -228,9 +231,15 @@ class ShopifyAPI
     }
   end
 
-  def get_objs objs_name, obj_class, data
+  def get_objs objs_name, obj_class
     objs = Array.new
-    shopify_objs = api_get objs_name, data || {}
+    shopify_objs = api_get objs_name
+    
+    return format_objs objs_name, obj_class
+  end
+
+  def format_objs shopify_objs, obj_class
+    objs = Array.new
     if shopify_objs.values.first.kind_of?(Array)
       shopify_objs.values.first.each do |shopify_obj|
         obj = obj_class.new
@@ -241,6 +250,37 @@ class ShopifyAPI
       obj = obj_class.new
       obj.add_shopify_obj shopify_objs.values.first, self
       objs << obj
+    end
+
+    objs
+  end
+
+  def get_batched_objs objs_name, obj_class
+    objs = Array.new
+    count = (api_get objs_name + '/count')['count']
+    page_size = 100
+    pages = (count / page_size.to_f).ceil
+    current_page = 1
+
+    while current_page <= pages do
+      shopify_objs = api_get objs_name,
+                         {'limit' => page_size, 'page' => current_page}
+      current_page += 1
+    
+      if shopify_objs.values.first.kind_of?(Array)
+        shopify_objs.values.first.each do |shopify_obj|
+          obj = obj_class.new
+          obj.add_shopify_obj shopify_obj, self
+          objs << obj
+        end
+      else
+        obj = obj_class.new
+        obj.add_shopify_obj shopify_objs.values.first, self
+        objs << obj
+      end
+
+      #reduce calls per second
+      sleep 0.3
     end
 
     objs

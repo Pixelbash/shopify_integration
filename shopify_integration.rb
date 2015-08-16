@@ -10,6 +10,12 @@ class ShopifyIntegration < EndpointBase::Sinatra::Base
     result 200, summary
   end
 
+  ## Multistep support endpoints:
+  ## get_ for products, customers
+  post '/multistep/*_*' do |action, obj_name|
+    shopify_action_multistep "#{action}_#{obj_name}", obj_name.singularize
+  end
+
   ## Supported endpoints:
   ## get_ for orders, products, inventories, shipments, customers
   ## add_ for product, customer
@@ -20,6 +26,54 @@ class ShopifyIntegration < EndpointBase::Sinatra::Base
   end
 
   private
+    def shopify_action_multistep action, obj_name
+      begin
+        action_type = action.split('_')[0]
+
+        # log = Logger.new(STDOUT)
+        # log.level = Logger::WARN
+
+        shopify  = ShopifyAPI.new(@payload, @config)
+        response = shopify.send(action + '_multistep')
+
+        case action_type
+        when 'get'
+          response['objects'].each do |obj|
+            ## Check if object has a metafield with a Wombat ID in it,
+            ## if so change object ID to that prior to adding to Wombat
+            wombat_id = shopify.wombat_id_metafield obj_name, obj['shopify_id']
+            unless wombat_id.nil?
+              obj['id'] = wombat_id
+            end
+
+            ## Add object to Wombat
+            add_object obj_name, obj
+          end
+        end
+
+        # avoids "Successfully retrieved 0 products from Shopify."
+        if skip_summary?(response, action_type)
+          return result 200
+        # batches results so we don't overwhelm wombat
+        elsif has_next_page?(response, action_type)
+          # log.error "Returning 206"
+          # log.error "Returning next page:" + response['next_page'].to_s
+          add_parameter 'since', @config['since']
+          add_parameter 'next_page', response['next_page']
+          return result 206, response['message']
+        # Last one
+        else
+          # log.error "Returning 200"
+          add_parameter 'since', Time.now.utc.iso8601
+          return result 200, response['message']
+        end
+      rescue => e
+        print e.cause
+        print e.backtrace.join("\n")
+        result 500, (e.try(:response) ? e.response : e.message)
+      end
+    end
+
 
     def shopify_action action, obj_name
       begin
@@ -70,7 +124,7 @@ class ShopifyIntegration < EndpointBase::Sinatra::Base
           end
         end
 
-        # avoids "Successfully retrieved 0 customers from Shopify."
+        # batches results so we don't overwhelm wombat
         if skip_summary?(response, action_type)
           return result 200
         else
@@ -89,6 +143,10 @@ class ShopifyIntegration < EndpointBase::Sinatra::Base
 
     def update_without_shopify_id?(action_type, obj_name)
       action_type == 'update' && @payload[obj_name]['shopify_id'].nil? && obj_name != "shipment"
+    end
+
+    def has_next_page?(response, action_type)
+      !response['next_page'].nil?
     end
 
     def skip_summary?(response, action_type)
